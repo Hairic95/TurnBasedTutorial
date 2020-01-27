@@ -1,6 +1,180 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://src/Scenes/BattleScene.cs" type="Script" id=1]
+[ext_resource path="res://assets/WhiteCanvas.png" type="Texture" id=1]
+[ext_resource path="res://assets/Arena.png" type="Texture" id=2]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+
+uniform int seed = 1234;
+uniform int NUM_OCTAVES = 4;
+uniform float threshold = 0.1;
+
+float random (in vec2 p) {
+	vec3 pTemp = vec3(p.x, p.y, 0.0);
+	vec3 p3 = fract(vec3(pTemp.xyx) * .1031);
+	p3 += dot(p3, p3.yzx + 19.19);
+	return fract((p3.x + p3.y) * p3.z);
+}
+
+float noise (in vec2 _st) {
+	vec2 i = floor(_st);
+	vec2 f = fract(_st);
+	
+	float a = random(i);
+	float b = random(i + vec2(1.0, 0.0));
+	float c = random(i + vec2(0.0, 1.0));
+	float d = random(i + vec2(1.0, 1.0));
+	
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	
+	return mix(a, b, u.x) + 
+			(c - a) * u.y * (1.0 - u.x) +
+			(d - b) * u.x * u.y; 
+}
+
+vec3 permute(vec3 x) {
+	return mod(((x * 34.0) + 1.0) * x, 289.0); 
+}
+
+
+float snoise(vec2 v){
+  vec4 C = vec4(0.211324865405187, 0.366025403784439,
+           -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec4 x0Temp = vec4(x0, 0, 0);
+  vec2 i1;
+  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0Temp.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+  + i.x + vec3(0.0, i1.x, 1.0 ));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+    dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ;
+  m = m*m ;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+vec2 hash( vec2 p ){
+	p = vec2( dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));
+	return fract(sin(p)*43758.5453);
+}
+
+float voronoi( in vec2 x ){
+	vec2 n = floor( x );
+	vec2 f = fract( x );
+	
+	float F1 = 8.0;
+	float F2 = 8.0;
+	
+	for( int j=-1; j<=1; j++ )
+		for( int i=-1; i<=1; i++ ){
+			vec2 g = vec2(float(i), float(j));
+			vec2 o = hash( n + g );
+
+			//o = 0.5 + 0.41*sin( TIME + 6.2831*o );
+			vec2 r = g - f + o;
+
+		float d = 	//dot(r,r);				// euclidean^2
+				  	 sqrt(dot(r,r)) ;			// euclidean
+					/*random(r) < 3.0 ? abs(r.x) + abs(r.y) :		// manhattan
+					random(r) < 4.0 ? max(abs(r.x), abs(r.y)) :	// chebyshev
+					0.0;
+*/
+		if( d<F1 ) { 
+			F2 = F1; 
+			F1 = d; 
+		} else if( d<F2 ) {
+			F2 = d;
+		}
+    }
+	
+	float c = F1; 
+			 /* function < 2.0 ? F2 : 
+			  function < 3.0 ? F2-F1 :
+			  function < 4.0 ? (F1+F2)/2.0 : 
+			  0.0;
+		*/
+    return c;
+}
+
+float fbm( in vec2 p ){
+	float s = 0.0;
+	float m = 0.0;
+	float a = 0.5;
+	
+	for( int i=0; i<NUM_OCTAVES; i++ ){
+		s += a * voronoi(p);
+		m += a;
+		a *= 0.5;
+		p *= 2.0;
+	}
+	return s/m;
+}
+
+float distance_to(vec2 pos1, vec2 pos2){
+	return sqrt(abs(pow(pos1.x - pos2.x, 2.0) + pow(pos1.y - pos2.y, 2.0)));
+}
+
+uniform float circle_size = 0.05;
+uniform vec2 center = vec2(0.5, 0.5);
+
+uniform float h_mov = -0.2;
+uniform float v_mov = -0.2;
+
+void fragment() {
+	//COLOR = vec4(vec3(step(snoise((UV) * 10.0 * float(NUM_OCTAVES) + vec2((TIME * 3.0), sin(TIME * 1.0))), threshold - (sin(TIME) / 8.0))), 1.0);
+	
+	COLOR = vec4(vec3(noise((UV + vec2(h_mov * TIME, v_mov * TIME)) * float(NUM_OCTAVES))), 1.0);
+	COLOR.xyz =  vec3(snoise(vec2(noise(vec2(noise(vec2(snoise((UV + vec2(h_mov * TIME, v_mov * (TIME + sin(TIME)))) * float(NUM_OCTAVES)))))) * fbm(UV.xy))));
+	
+	COLOR.xyz = vec3(step(COLOR.x + abs(sin(TIME) * 0.05), threshold + sin(TIME) / 64.0));
+	
+	vec2 colorseed = (UV.xy * UV.xy / 14.0 + UV.yx * .2) + vec2(fbm(UV) + sin(TIME), fbm(UV) - cos(TIME)) * .4;
+	
+	if (colorseed.x < 0.04)
+		COLOR = COLOR * vec4(156.0, 43.0, 43.0, 255.0) / 255.0;
+	else if (colorseed.x < 0.19)
+		COLOR = COLOR * vec4(209.0, 124.0, 71.0, 255.0) / 255.0;
+	else if (colorseed.x < 0.35)
+		COLOR = COLOR * vec4(233.0, 204.0, 149.0, 255.0) / 255.0;
+	else if (colorseed.x < 0.54)
+		COLOR = COLOR * vec4(77.0, 150.0, 64.0, 255.0) / 255.0;
+	else if (colorseed.x < 0.73)
+		COLOR = COLOR * vec4(74.0, 112.0, 1996.0, 255.0) / 255.0;
+	else
+		COLOR = COLOR * vec4(96.0, 62.0, 138.0, 255.0) / 255.0;
+}
+"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/seed = 1234
+shader_param/NUM_OCTAVES = 4
+shader_param/threshold = 0.1
+shader_param/circle_size = 0.05
+shader_param/center = Vector2( 0.5, 0.5 )
+shader_param/h_mov = -0.2
+shader_param/v_mov = -0.2
 
 [node name="BattleScene" type="Node2D"]
-script = ExtResource( 1 )
+
+[node name="BG" type="Sprite" parent="."]
+material = SubResource( 2 )
+position = Vector2( 160, 88 )
+texture = ExtResource( 1 )
+
+[node name="Arena" type="Sprite" parent="."]
+position = Vector2( 152.815, 114.58 )
+texture = ExtResource( 2 )

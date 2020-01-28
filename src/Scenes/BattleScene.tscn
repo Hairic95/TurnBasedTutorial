@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://assets/WhiteCanvas.png" type="Texture" id=1]
 [ext_resource path="res://assets/Arena.png" type="Texture" id=2]
+[ext_resource path="res://src/Scenes/BattleScene.cs" type="Script" id=3]
 
 [sub_resource type="Shader" id=1]
 code = "shader_type canvas_item;
@@ -177,13 +178,14 @@ func _ready():
 	pass # Replace with function body.
 func _process(delta):
 	time += delta
-	position += Vector2(0.0, .2 * cos(time))
+	position = position.linear_interpolate(position + Vector2(0.0, .2 * cos(time)), .6)
 	
 	if time == 2 * PI:
 		time = 0.0
 "
 
 [node name="BattleScene" type="Node2D"]
+script = ExtResource( 3 )
 
 [node name="BG" type="Sprite" parent="."]
 material = SubResource( 2 )
@@ -195,3 +197,19 @@ texture = ExtResource( 1 )
 position = Vector2( 160, 105 )
 texture = ExtResource( 2 )
 script = SubResource( 3 )
+
+[node name="Positions" type="Node2D" parent="."]
+
+[node name="Ally1" type="Position2D" parent="Positions"]
+position = Vector2( 104, 80 )
+
+[node name="Ally2" type="Position2D" parent="Positions"]
+position = Vector2( 104, 80 )
+
+[node name="Enemy1" type="Position2D" parent="Positions"]
+position = Vector2( 104, 80 )
+
+[node name="Enemy2" type="Position2D" parent="Positions"]
+position = Vector2( 104, 80 )
+
+[node name="CombantViews" type="Node2D" parent="."]

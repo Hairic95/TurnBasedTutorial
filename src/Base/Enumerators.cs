@@ -1,19 +1,26 @@
 using Godot;
 using System;
 
-public static class Enumerators
-{
-    
-    public static enum EffectType {
+namespace Base {
+    public class Enumerators
+    {
+        
+        public enum eEffectType {
+
+        }
+
+        public enum eActionTarget {
+            OneEnemy,
+            AllEnemies,
+            Self,
+            Ally,
+            AllParty
+        }
+
+        public enum eCombatantSide {
+            Ally,
+            Enemy
+        }
 
     }
-
-    public static enum ActionTarget {
-        OneEnemy,
-        AllEnemies,
-        Self,
-        Ally,
-        AllParty
-    }
-
 }

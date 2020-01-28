@@ -9,7 +9,7 @@ public class BattleScene : Node2D
     BattleController battleController;
 
     [Export]
-    PackedScene CombatantComponentView_Referene;
+    PackedScene CombatantComponentView_Referene = (PackedScene)GD.Load("res://src/Views/Components/Combatant/CombatantViewComponent.tscn");
 
     public override void _Ready()
     {
@@ -20,6 +20,9 @@ public class BattleScene : Node2D
         battleController.AddCombatant("res://assets/enemy1.png", Enumerators.eCombatantSide.Enemy);
         battleController.AddCombatant("res://assets/enemy2.png", Enumerators.eCombatantSide.Enemy);
 
+        int numberOfAllies = 1;
+        int numberOfEnemies = 1;
+
         foreach(Combatant c in battleController.CurrentCombatant)
         {
             switch(c.Side)
@@ -27,13 +30,16 @@ public class BattleScene : Node2D
                 case (Enumerators.eCombatantSide.Ally):
                     var newAlly = (Sprite)CombatantComponentView_Referene.Instance();
                     newAlly.Texture = c.CharacterModel;
-                    GetNode("CombantViews").AddChild(newAlly);
+                    newAlly.Position = ((Position2D) GetNode("Arena/StartingPosition/Ally" + numberOfAllies)).Position;
+                    GetNode("Arena/CombatantViews").AddChild(newAlly);
+                    numberOfAllies += 1;
                     break;
                 case (Enumerators.eCombatantSide.Enemy):
                     var newEnemy = (Sprite)CombatantComponentView_Referene.Instance();
                     newEnemy.Texture = c.CharacterModel;
-                    GetNode("CombantViews").AddChild(newEnemy);
-                    newEnemy.Position = ((Position2D) GetNode(@"Positions\Enemy2")).Position;
+                    newEnemy.Position = ((Position2D) GetNode("Arena/StartingPosition/Enemy" + numberOfEnemies)).Position;
+                    GetNode("Arena/CombatantViews").AddChild(newEnemy);
+                    numberOfEnemies += 1;
                     break;
             }
         }

@@ -15,7 +15,7 @@ _global_script_class_icons={
 
 [application]
 
-config/name="test"
+config/name="Turn Based Tutorial"
 run/main_scene="res://src/Scenes/BattleScene.tscn"
 config/icon="res://icon.png"
 

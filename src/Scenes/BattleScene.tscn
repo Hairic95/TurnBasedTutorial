@@ -172,15 +172,13 @@ shader_param/v_mov = -0.2
 [sub_resource type="GDScript" id=3]
 script/source = "extends Sprite
 
-var time = 0.0
-
-func _ready():
-	pass # Replace with function body.
+export (float) var WaveRadius = 36
+export (float) var WaveSpeed = 1.5
+var time : float = 0.0
 func _process(delta):
 	time += delta
-	position = position.linear_interpolate(position + Vector2(0.0, .2 * cos(time)), .6)
-	
-	if time == 2 * PI:
+	position += Vector2(0, sin(time * WaveSpeed)) * delta * WaveRadius
+	if time >= 2 * PI:
 		time = 0.0
 "
 
@@ -198,18 +196,18 @@ position = Vector2( 160, 105 )
 texture = ExtResource( 2 )
 script = SubResource( 3 )
 
-[node name="Positions" type="Node2D" parent="."]
+[node name="StartingPosition" type="Node2D" parent="Arena"]
 
-[node name="Ally1" type="Position2D" parent="Positions"]
-position = Vector2( 104, 80 )
+[node name="Ally1" type="Position2D" parent="Arena/StartingPosition"]
+position = Vector2( -48, -25 )
 
-[node name="Ally2" type="Position2D" parent="Positions"]
-position = Vector2( 104, 80 )
+[node name="Ally2" type="Position2D" parent="Arena/StartingPosition"]
+position = Vector2( -56, 7 )
 
-[node name="Enemy1" type="Position2D" parent="Positions"]
-position = Vector2( 104, 80 )
+[node name="Enemy1" type="Position2D" parent="Arena/StartingPosition"]
+position = Vector2( 48, -25 )
 
-[node name="Enemy2" type="Position2D" parent="Positions"]
-position = Vector2( 104, 80 )
+[node name="Enemy2" type="Position2D" parent="Arena/StartingPosition"]
+position = Vector2( 64, 7 )
 
-[node name="CombantViews" type="Node2D" parent="."]
+[node name="CombatantViews" type="Node2D" parent="Arena"]

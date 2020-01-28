@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Tools</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0F14B1B8-B97D-4CED-A784-80D9B84E2A63}</ProjectGuid>
+    <ProjectGuid>{A18EA803-00F4-479E-8379-7496E6494063}</ProjectGuid>
     <OutputType>Library</OutputType>
     <OutputPath>.mono\temp\bin\$(Configuration)</OutputPath>
     <RootNamespace>TurnBasedTutorial</RootNamespace>
@@ -54,10 +54,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\Actions\Action.cs" />
-    <Compile Include="src\Actions\Effect.cs" />
     <Compile Include="src\Base\Enumerators.cs" />
-    <Compile Include="src\Entities\Combatant.cs" />
+    <Compile Include="src\Controllers\BattleController.cs" />
+    <Compile Include="src\Models\Action\Action.cs" />
+    <Compile Include="src\Models\Action\Effect.cs" />
+    <Compile Include="src\Model\Combatant\Combatant.cs" />
     <Compile Include="src\Scenes\BattleScene.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
